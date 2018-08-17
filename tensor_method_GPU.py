@@ -121,15 +121,16 @@ def svd_update(A,idxa,B,idxb,T_C,going_right,err,max_bond):
     idxb_1 = np.array(idxb)[ran_b]
     sa = sa[ran_a]
     sb = sb[ran_b]
-
-    tensor_A = A.permute(ran_a).contiguous()
-    tensor_B = B.permute(ran_b).contiguous()
-    tensor_A = tensor_A.view(p, -1)
-    tensor_B = tensor_B.view(p, -1)
-    tensor_C = torch.mm(tensor_A.t(), tensor_B)
     if torch.is_tensor(T_C):
         T_C=T_C.view_as(tensor_C)
         tensor_C=T_C
+    else:
+        tensor_A = A.permute(ran_a).contiguous()
+        tensor_B = B.permute(ran_b).contiguous()
+        tensor_A = tensor_A.view(p, -1)
+        tensor_B = tensor_B.view(p, -1)
+        tensor_C = torch.mm(tensor_A.t(), tensor_B)
+
     # Ma[:, :] = Ma[:, -1::-1]
     U,S,V=torch.svd(tensor_C)
     bond=(sum(S>S[0]*err))
@@ -143,10 +144,10 @@ def svd_update(A,idxa,B,idxb,T_C,going_right,err,max_bond):
     # print(torch.mm(U,U.t()))
     # print(torch.mm(V,V.t()))
     if going_right==1:
-        V=torch.mm(S*torch.eye(bond).cuda(),V)
+        V=torch.mm(S*torch.eye(bond),V)
         V=V / torch.sqrt(sum(sum(V*V)))
     else:
-        U=torch.mm(U,torch.eye(bond).cuda()*S)
+        U=torch.mm(U,torch.eye(bond)*S)
         U = U / torch.sqrt(sum(sum(U * U)))
 
     # for i in np.arange(bond/2+1,1,-1):

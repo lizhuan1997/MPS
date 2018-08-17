@@ -415,7 +415,7 @@ class tensor_net:
                                       self.tensors[self.current_site+1],self.order_left[self.current_site+1])
                 self.Z=self.compute_Z()
                 self.psi=self.compute_psi()
-                dmerge=self.gradient_descent()
+                dmerge=self.gradient_descent
                 # nll=0
                 # for k in range(self.m):
                 #     nll=nll+(torch.log(self.psi[k] *self.psi[k] /self.Z))
@@ -442,7 +442,7 @@ class tensor_net:
                 #     nll = nll + ( torch.log(self.psi[k] *self.psi[k]  / self.Z))
                 # nll=nll/self.m
                 # print nll,i
-                dmerge = self.gradient_descent()
+                dmerge = self.gradient_descent
                 self.tensors[self.current_site], self.tensors[self.current_site + 1] = svd_update(
                     self.tensors[self.current_site], self.order[self.current_site],
                     self.tensors[self.current_site + 1], self.order[self.current_site + 1], dmerge,
