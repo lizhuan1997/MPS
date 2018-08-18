@@ -2,6 +2,7 @@ import numpy as np
 import torch
 from tensor_method_GPU import contra, svd_update, tensor_slide, tensor_add
 import time
+import scipy.io as sio
 class tensor_net:
     def __init__(self,image,learning_rate,links,max_bond,min_bond):
         self.image=image
@@ -24,7 +25,7 @@ class tensor_net:
         self.order[0]=([0,1])
         self.order_left.append([0,8*self.n+1])
         self.order_right.append([0,1])
-        self.merged_tensor=torch.zeros([2,2,2]).cuda()
+        self.merged_tensor=torch.zeros([2,2,2],dtype=torch.float64).cuda()
         self.merged_idx=[]
         self.psi=[]
         self.Z=0
@@ -46,14 +47,14 @@ class tensor_net:
             self.order_left[links[j][1]] = self.order_left[links[j][1]] + [14 * self.n + 2*j + 1]
 
     def init_image_tensor(self):
-        self.image_tensors.append(torch.zeros([2,self.m]).cuda())
+        self.image_tensors.append(torch.zeros([2,self.m],dtype=torch.float64).cuda())
         for j in range(self.m):
             if self.image[0][j] == 1:
                 self.image_tensors[0][1, j] = 1
             else:
                 self.image_tensors[0][0, j] = 1
         for i in range(1,self.n):
-            self.image_tensors.append(torch.zeros([self.m,2,self.m]).cuda())
+            self.image_tensors.append(torch.zeros([self.m,2,self.m],dtype=torch.float64).cuda())
             for j in range(self.m):
                 if self.image[i][j]==1:
                     self.image_tensors[i][j,1,j]=1
@@ -61,15 +62,15 @@ class tensor_net:
                     self.image_tensors[i][j,0,j]=1
         # self.image_tensors.append(torch.eye(self.m))
     def init_tensors(self):
-        self.tensors.append(torch.rand([2,self.min_bond]).cuda())
+        self.tensors.append(torch.rand([2,self.min_bond],dtype=torch.float64).cuda())
         for i in range(1,self.n-1):
-            self.tensors.append(torch.rand(self.min_bond,2,self.min_bond).cuda())
-        self.tensors.append(torch.rand([self.min_bond,2]).cuda())
+            self.tensors.append(torch.rand(self.min_bond,2,self.min_bond,dtype=torch.float64).cuda())
+        self.tensors.append(torch.rand([self.min_bond,2],dtype=torch.float64).cuda())
         for j in range(len(self.links)):
             sl=self.tensors[self.links[j][0]].size()
             sr=self.tensors[self.links[j][1]].size()
-            self.tensors[self.links[j][0]]=torch.rand(list(sl)+list([2])).cuda()
-            self.tensors[self.links[j][1]] = torch.rand(list(sr) + list([2])).cuda()
+            self.tensors[self.links[j][0]]=torch.rand(list(sl)+list([2]),dtype=torch.float64).cuda()
+            self.tensors[self.links[j][1]] = torch.rand(list(sr) + list([2]),dtype=torch.float64).cuda()
         self.going_righ=1
         for j in range(self.n-1):
             self.current_site=j
@@ -239,7 +240,7 @@ class tensor_net:
         #             dmerge=tensor_slide(dmerge,self.merged_idx,[2-im1,2-im2],[self.current_site*2,self.current_site*2+2],dpsi,(dPsi[0][-1]))
         psi_1=1.0/self.psi
         dPsi, dPsi_idx=contra(dPsi, dPsi_idx,psi_1,[-1])
-        dmerge=tensor_add(2*dPsi/self.n,dPsi_idx,-2*dZ/self.Z,dZ_idx)
+        dmerge=tensor_add(2*dPsi,dPsi_idx,-2*self.m*dZ/self.Z,dZ_idx)
 
         gnorm = torch.norm(dmerge) / 20
         if (gnorm < 1.0): #% & & self.bond_dims(self.current_bond) <= 50;
@@ -268,7 +269,7 @@ class tensor_net:
                 self.tensors[self.current_site], self.tensors[self.current_site + 1] = svd_update(
                     self.tensors[self.current_site], self.order[self.current_site],
                     self.tensors[self.current_site + 1], self.order[self.current_site + 1], dmerge,
-                    self.going_righ, 0.0002, self.max_bond
+                    self.going_righ, 1e-6, self.max_bond
                 )
                 self.contraction_updat_twosite2()
 
@@ -290,7 +291,7 @@ class tensor_net:
                 self.tensors[self.current_site], self.tensors[self.current_site + 1] = svd_update(
                     self.tensors[self.current_site], self.order[self.current_site],
                     self.tensors[self.current_site + 1], self.order[self.current_site + 1], dmerge,
-                    self.going_righ, 0.0002, self.max_bond
+                    self.going_righ, 1e-6, self.max_bond
                 )
                 self.contraction_updat_twosite2()
             # for j in range(len(self.links)):
@@ -310,16 +311,20 @@ class tensor_net:
                 nll = nll + (torch.log(self.psi[k] *self.psi[k] / self.Z))
             nll = nll / self.m
             print nll
-            if nll>self.nll_history[-1]+0.002:
+            if nll>self.nll_history[-1]+2e-5:
                 self.nll_history.append(nll)
             else:
                 break
 
 
 
-T=torch.rand([50,20])
-T[T>0.5]=2
-T[T<=0.5]=1
+
+data=sio.loadmat('mnist_100_images.mat')
+images=data['train_x_binary']
+images=torch.Tensor([images])
+images=images.view([784,100])
+images=images[:,0:20]
+del data
 # net=tensor_net(T,0.0001,np.array([]),20,2)
 # net.init_tensors()
 # net.init_image_tensor()
@@ -327,11 +332,11 @@ T[T<=0.5]=1
 # t1=time.time()
 # net.train(50)
 # t2=time.time()
-net=tensor_net(T,0.0001,np.array([]),40,2)
+net=tensor_net(images,0.001,np.array([[250,500]]),60,2)
 net.init_tensors()
 net.init_image_tensor()
 net.contraction_update_all_left2()
 t3=time.time()
-net.train2(100)
+net.train2(5)
 t4=time.time()
 print t4-t3

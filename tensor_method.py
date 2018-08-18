@@ -1,49 +1,6 @@
 import numpy as np
 import torch
 import time
-# def contra(A,idxa,B,idxb):
-#     Ma=np.zeros([3,len(idxa)],dtype=int)
-#     Ma[0,:]=np.array(A.size())
-#     Ma[1, :] = np.array(idxa)
-#     Ma[2,:]=np.arange(0,len(idxa),1,int)
-#     Mb = np.zeros([3, len(idxb)],dtype=int)
-#     Mb[0, :] = np.array(B.size())
-#     Mb[1, :] = np.array(idxb)
-#     Mb[2, :] = np.arange(0, len(idxb), 1, int)
-#     i = 0
-#     p = 1
-#     for ia in idxa:
-#
-#         if sum(np.array(idxb)==ia)!=0:
-#             ina=list(Ma[1,:]).index(ia)
-#             inb=list(Mb[1,:]).index(ia)
-#             adda=Ma[:,ina]
-#             addb=Mb[:,inb]
-#             Ma=np.delete(Ma,ina,1)
-#             Mb = np.delete(Mb, inb, 1)
-#             Ma=np.column_stack((adda,Ma))
-#             Mb = np.column_stack((addb,Mb))
-#
-#             i=i+1
-#             p=p*Ma[0,0]
-#     # Ma[:,:]=Ma[:,-1::-1]
-#     tensor_A=A.permute(list(Ma[2,:])).contiguous()
-#     tensor_B=B.permute(list(Mb[2,:])).contiguous()
-#     tensor_A=tensor_A.view(p,-1)
-#     tensor_B = tensor_B.view(p,-1)
-#     tensor_C=torch.mm(tensor_A.t(),tensor_B)
-#     # Ma[:, :] = Ma[:, -1::-1]
-#
-#
-#     if i ==0:
-#         C=tensor_C.view(list(Ma[0,:])+list(Mb[0,:]))
-#         idxc=list(Ma[1,:])+list(Mb[1,:])
-#
-#     else:
-#
-#         C = tensor_C.view(list(Ma[0, i:])+list(Mb[0, i:]))
-#         idxc = list(Ma[1, i:]) + list(Mb[1, i:])
-#     return C,idxc
 
 
 def contra(A, idxa, B, idxb):
@@ -136,7 +93,7 @@ def svd_update(A,idxa,B,idxb,T_C,going_right,err,max_bond):
 
     # Ma[:, :] = Ma[:, -1::-1]
     U,S,V=torch.svd(tensor_C)
-    bond=(sum(S>S[0]*err))
+    bond=(sum(S>=S[0]*err))
     bond=bond.item()
     bond=min(bond,max_bond)
     U=U[:,:bond]
@@ -147,10 +104,10 @@ def svd_update(A,idxa,B,idxb,T_C,going_right,err,max_bond):
     # print(torch.mm(U,U.t()))
     # print(torch.mm(V,V.t()))
     if going_right==1:
-        V=torch.mm(S*torch.eye(bond),V)
+        V=torch.mm(S*torch.eye(bond,dtype=torch.float64),V)
         V=V / torch.sqrt(sum(sum(V*V)))
     else:
-        U=torch.mm(U,torch.eye(bond)*S)
+        U=torch.mm(U,torch.eye(bond,dtype=torch.float64)*S)
         U = U / torch.sqrt(sum(sum(U * U)))
 
     # for i in np.arange(bond/2+1,1,-1):
@@ -277,7 +234,9 @@ def tensor_slide(A,idxa,v,idxv,C,idxc):
     A=A.permute((ra_1))
     return A
 
-
+# def load_mnist(file):
+#     mat = scipy.io.loadmat(file)
+#     return mat
 
 # a=[1,2,3,4]
 # p
@@ -308,15 +267,17 @@ def tensor_slide(A,idxa,v,idxv,C,idxc):
 # # # # v=[0,0]
 # # # # c=torch.ones([3,4])
 # print contra(u,[1,3,4],u,[2,3,4]),contra(v,[1,5,6],v,[2,5,6])
-a=torch.rand([50,2,50])
-b=torch.rand([50,2,50])
-t1=time.time()
-contra(a, [1, 2, 3], b, [3, 4, 5])[0]
-t2=time.time()
-contra(a,[1,2,3 ],b,[3,4,5])[0]
-t3=time.time()
-contra(a, [1, 2, 3], b, [3, 4, 5])[0]
-t4=time.time()
-contra(a,[1,2,3 ],b,[3,4,5])[0]
-t5=time.time()
-print t2-t1,t3-t2,t4-t3,t5-t4
+# a=torch.rand([50,2,50])
+# b=torch.rand([50,2,50])
+# t1=time.time()
+# contra(a, [1, 2, 3], b, [3, 4, 5])[0]
+# t2=time.time()
+# contra(a,[1,2,3 ],b,[3,4,5])[0]
+# t3=time.time()
+# contra(a, [1, 2, 3], b, [3, 4, 5])[0]
+# t4=time.time()
+# contra(a,[1,2,3 ],b,[3,4,5])[0]
+# t5=time.time()
+# print t2-t1,t3-t2,t4-t3,t5-t4
+# a=torch.ones([2,2,2])
+# print torch.norm(a)

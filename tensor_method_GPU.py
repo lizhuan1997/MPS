@@ -144,10 +144,10 @@ def svd_update(A,idxa,B,idxb,T_C,going_right,err,max_bond):
     # print(torch.mm(U,U.t()))
     # print(torch.mm(V,V.t()))
     if going_right==1:
-        V=torch.mm(S*torch.eye(bond),V)
+        V=torch.mm(S*torch.eye(bond,dtype=torch.float64),V)
         V=V / torch.sqrt(sum(sum(V*V)))
     else:
-        U=torch.mm(U,torch.eye(bond)*S)
+        U=torch.mm(U,torch.eye(bond,dtype=torch.float64)*S)
         U = U / torch.sqrt(sum(sum(U * U)))
 
     # for i in np.arange(bond/2+1,1,-1):

@@ -2,6 +2,8 @@ import numpy as np
 import torch
 from tensor_method import contra, svd_update, tensor_slide, tensor_add
 import time
+import scipy.io as sio
+
 class tensor_net:
     def __init__(self,image,learning_rate,links,max_bond,min_bond):
         self.image=image
@@ -24,7 +26,7 @@ class tensor_net:
         self.order[0]=([0,1])
         self.order_left.append([0,8*self.n+1])
         self.order_right.append([0,1])
-        self.merged_tensor=torch.zeros([2,2,2])#.cuda()
+        self.merged_tensor=torch.zeros([2,2,2],dtype=torch.float64)#.cuda()
         self.merged_idx=[]
         self.psi=[]
         self.Z=0
@@ -46,14 +48,14 @@ class tensor_net:
             self.order_left[links[j][1]] = self.order_left[links[j][1]] + [14 * self.n + 2*j + 1]
 
     def init_image_tensor(self):
-        self.image_tensors.append(torch.zeros([2,self.m]))
+        self.image_tensors.append(torch.zeros([2,self.m],dtype=torch.float64))
         for j in range(self.m):
             if self.image[0][j] == 1:
                 self.image_tensors[0][1, j] = 1
             else:
                 self.image_tensors[0][0, j] = 1
         for i in range(1,self.n):
-            self.image_tensors.append(torch.zeros([self.m,2,self.m]))
+            self.image_tensors.append(torch.zeros([self.m,2,self.m],dtype=torch.float64))
             for j in range(self.m):
                 if self.image[i][j]==1:
                     self.image_tensors[i][j,1,j]=1
@@ -61,15 +63,15 @@ class tensor_net:
                     self.image_tensors[i][j,0,j]=1
         # self.image_tensors.append(torch.eye(self.m))
     def init_tensors(self):
-        self.tensors.append(torch.rand([2,self.min_bond]))
+        self.tensors.append(torch.rand([2,self.min_bond],dtype=torch.float64))
         for i in range(1,self.n-1):
-            self.tensors.append(torch.rand(self.min_bond,2,self.min_bond))
-        self.tensors.append(torch.rand([self.min_bond,2]))
+            self.tensors.append(torch.rand(self.min_bond,2,self.min_bond,dtype=torch.float64))
+        self.tensors.append(torch.rand([self.min_bond,2],dtype=torch.float64))
         for j in range(len(self.links)):
             sl=self.tensors[self.links[j][0]].size()
             sr=self.tensors[self.links[j][1]].size()
-            self.tensors[self.links[j][0]]=torch.rand(list(sl)+list([2]))
-            self.tensors[self.links[j][1]] = torch.rand(list(sr) + list([2]))
+            self.tensors[self.links[j][0]]=torch.rand(list(sl)+list([2]),dtype=torch.float64)
+            self.tensors[self.links[j][1]] = torch.rand(list(sr) + list([2]),dtype=torch.float64)
         self.going_righ=1
         for j in range(self.n-1):
             self.current_site=j
@@ -83,39 +85,6 @@ class tensor_net:
                             0, self.going_righ,err,max_bond)
             self.tensors[self.current_site]=u
             self.tensors[self.current_site+1]=v
-    def contraction_update_all_left(self):
-        v1=torch.Tensor([0,1])
-        v2=torch.Tensor([1,0])
-
-        self.going_righ=0
-        merg,idm = contra(self.tensors[0], self.order_left[0], self.tensors[0],self.order[0])
-        self.contraction_z[0]=([merg,idm])
-        merg_psi=[]
-        for j in range(self.m):
-            if self.image[0,j]==1:#n*m
-                mergv,idv=contra(self.tensors[0],self.order_left[0],v1,[0])
-            else:
-                mergv,idv=contra(self.tensors[0],self.order_left[0],v2,[0])
-            merg_psi.append(mergv)
-        self.contraction_psi[0]=([merg_psi,idv])
-
-        for i in range(1,self.n-2):
-            merg,idm=contra(merg, idm, self.tensors[i],self.order_left[i])
-            merg, idm = contra(merg, idm, self.tensors[i], self.order[i])
-            self.contraction_z[i]=([merg,idm])
-
-            merg_psi = []
-            for j in range(0,self.m):
-                if self.image[i, j] == 1:  # n*m
-                    mergv,idvm=contra(self.contraction_psi[i-1][0][j],idv,self.tensors[i], self.order_left[i])
-                    mergv,idvm = contra(mergv,idvm, v1, [2*i])
-                else:
-                    mergv, idvm = contra(self.contraction_psi[i-1][0][j], idv, self.tensors[i], self.order_left[i])
-                    mergv, idvm = contra(mergv, idvm, v2, [2 * i])
-                merg_psi.append(mergv)
-            idv=idvm
-            self.contraction_psi[i]=([merg_psi,idvm])
-
     def contraction_update_all_left2(self):
         # v1=torch.Tensor([0,1])
         # v2=torch.Tensor([1,0])
@@ -134,75 +103,6 @@ class tensor_net:
             merg_psi,merg_psi_idx=contra(merg_psi,merg_psi_idx,self.tensors[i],self.order_left[i])
             merg_psi, merg_psi_idx = contra(merg_psi, merg_psi_idx, self.image_tensors[i], self.order_right[i])
             self.contraction_psi2[i] = ([merg_psi, merg_psi_idx])
-    def compute_psi(self):
-        Psi=[]
-        v1=torch.Tensor([0,1])#.cuda()
-        v2=torch.Tensor([1,0])#.cuda()
-        if self.current_site==0:
-            for j in range(self.m):
-                if self.image[0, j] == 1:  # n*m
-                    mergv, idvm = contra(self.tensors[0], self.order_left[0], v1, [0])
-                    mergv, idvm = contra(mergv, idvm, self.tensors[1],self.order_left[1])
-                    if self.image[1,j] == 1:
-                        mergv, idvm = contra(mergv, idvm,v1, [2])
-                    else:
-                        mergv, idvm = contra(mergv, idvm, v2, [2])
-                else:
-                    mergv, idvm = contra(self.tensors[0], self.order_left[0], v2, [0])
-                    mergv, idvm = contra(mergv, idvm, self.tensors[1], self.order_left[1])
-                    if self.image[1, j] == 1:
-                        mergv, idvm = contra(mergv, idvm, v1, [2])
-                    else:
-                        mergv, idvm = contra(mergv, idvm, v2, [2])
-
-
-                psi,id=contra(mergv,idvm,self.contraction_psi[2][0][j],self.contraction_psi[2][1])
-                Psi.append(psi)
-        else:
-            if self.current_site==self.n-2:
-                for j in range(self.m):
-                    if self.image[self.n-2, j] == 1:  # n*m
-                        mergv, idvm = contra(self.tensors[self.n-2], self.order_left[self.n-2], v1, [2*self.n-4])
-                        mergv, idvm = contra(mergv, idvm, self.tensors[self.n-1], self.order_left[self.n-1])
-                        if self.image[self.n-1, j] == 1:
-                            mergv, idvm = contra(mergv, idvm, v1, [2*self.n-2])
-                        else:
-                            mergv, idvm = contra(mergv, idvm, v2, [2*self.n-2])
-                    else:
-                        mergv, idvm = contra(self.tensors[self.n-2], self.order_left[self.n-2], v2, [2*self.n-4])
-                        mergv, idvm = contra(mergv, idvm, self.tensors[self.n-1], self.order_left[self.n-1])
-                        if self.image[self.n-1, j] == 1:
-                            mergv, idvm = contra(mergv, idvm, v1, [2*self.n-2])
-                        else:
-                            mergv, idvm = contra(mergv, idvm, v2, [2*self.n-2])
-
-                    psi, id = contra(mergv, idvm, self.contraction_psi[self.n-3][0][j],self.contraction_psi[self.n-3][1])
-                    Psi.append(psi)
-
-            else:
-                for j in range(self.m):
-                    if self.image[self.current_site, j] == 1:  # n*m
-                        mergv, idvm = contra(self.tensors[self.current_site], self.order_left[self.current_site], v1, [2*self.current_site])
-                        mergv, idvm = contra(mergv, idvm, self.tensors[self.current_site+1], self.order_left[self.current_site+1])
-                        if self.image[self.current_site+1, j] == 1:
-                            mergv, idvm = contra(mergv, idvm, v1, [2*self.current_site+2])
-                        else:
-                            mergv, idvm = contra(mergv, idvm, v2, [2*self.current_site+2])
-                    else:
-                        mergv, idvm = contra(self.tensors[self.current_site], self.order_left[self.current_site], v2,
-                                             [2 * self.current_site])
-                        mergv, idvm = contra(mergv, idvm, self.tensors[self.current_site + 1],
-                                             self.order_left[self.current_site + 1])
-                        if self.image[self.current_site + 1, j] == 1:
-                            mergv, idvm = contra(mergv, idvm, v1, [2 * self.current_site + 2])
-                        else:
-                            mergv, idvm = contra(mergv, idvm, v2, [2 * self.current_site + 2])
-
-                    mergv, idvm = contra(mergv, idvm, self.contraction_psi[self.current_site-1][0][j], self.contraction_psi[self.current_site-1][1])
-                    psi,id=contra(mergv, idvm, self.contraction_psi[self.current_site+2][0][j], self.contraction_psi[self.current_site+2][1])
-                    Psi.append(psi)
-
-        return Psi
 
     def compute_Z(self):
         merg,idm=contra(self.tensors[self.current_site],self.order[self.current_site],
@@ -245,76 +145,6 @@ class tensor_net:
                                 self.contraction_psi2[self.current_site + 2][1])
                 # Z, idz = contra(Z, idz, merg_l, idm_l)
         return psi
-    def contraction_updat_twosite(self):
-        v1 = torch.Tensor([0, 1])
-        v2 = torch.Tensor([1, 0])
-        if self.going_righ==0:
-            if self.current_site==self.n-2:
-                merg,idm=contra(self.tensors[self.n-1],self.order[self.n-1],self.tensors[self.n-1],self.order_left[self.n-1])
-                # self.contraction_z[self.current_site+1]=merg
-                merg_psi=[]
-                for j in range(self.m):
-                    if self.image[self.n-1, j] == 1:  # n*m
-                        mergv, idvm = contra(self.tensors[self.n-1], self.order_left[self.n-1], v1, [self.n*2-2])
-                    else:
-                        mergv, idvm = contra(self.tensors[self.n-1], self.order_left[self.n-1], v2, [self.n*2-2])
-                    merg_psi.append(mergv)
-
-            else:
-
-
-                merg, idm = contra(self.tensors[self.current_site+1], self.order_left[self.current_site+1],
-                                   self.contraction_z[self.current_site+2][0],self.contraction_z[self.current_site+2][1])
-                merg, idm = contra(merg, idm, self.tensors[self.current_site+1], self.order[self.current_site+1])
-
-                merg_psi = []
-                for j in range(0, self.m):
-                    if self.image[self.current_site+1, j] == 1:  # n*m
-                        mergv, idvm = contra(self.tensors[self.current_site+1], self.order_left[self.current_site+1],
-                                             self.contraction_psi[self.current_site + 2][0][j],self.contraction_psi[self.current_site + 2][1] )
-                        mergv, idvm = contra(mergv, idvm, v1, [2 * self.current_site+2])
-                    else:
-                        mergv, idvm = contra(self.tensors[self.current_site + 1], self.order_left[self.current_site + 1],
-                                             self.contraction_psi[self.current_site + 2][0][j],self.contraction_psi[self.current_site + 2][1])
-                        mergv, idvm = contra(mergv, idvm, v2, [2 * self.current_site + 2])
-                    merg_psi.append(mergv)
-
-            self.contraction_psi[self.current_site+1]=([merg_psi,idvm])
-            self.contraction_z[self.current_site+1]=([merg,idm])
-
-        if self.going_righ == 1:
-                if self.current_site == 0:
-                    merg, idm = contra(self.tensors[0], self.order[0], self.tensors[0],self.order_left[0])
-                    # self.contraction_z[self.current_site+1]=merg
-                    merg_psi=[]
-                    for j in range(self.m):
-                        if self.image[0, j] == 1:  # n*m
-                            mergv, idvm = contra(self.tensors[0], self.order_left[0], v1, [0])
-                        else:
-                            mergv, idvm = contra(self.tensors[0], self.order_left[0], v2, [0])
-                        merg_psi.append(mergv)
-
-                else:
-
-                    merg, idm = contra(self.tensors[self.current_site ], self.order_left[self.current_site ],
-                                       self.contraction_z[self.current_site -1][0],self.contraction_z[self.current_site-1][1])
-                    merg, idm = contra(merg, idm, self.tensors[self.current_site ],
-                                       self.order[self.current_site ])
-
-                    merg_psi = []
-                    for j in range(0, self.m):
-                        if self.image[self.current_site , j] == 1:  # n*m
-                            mergv, idvm = contra(self.tensors[self.current_site ], self.order_left[self.current_site ],
-                                                 self.contraction_psi[self.current_site -1][0][j],self.contraction_psi[self.current_site -1][1])
-                            mergv, idvm = contra(mergv, idvm, v1, [2 * self.current_site ])
-                        else:
-                            mergv, idvm = contra(self.tensors[self.current_site], self.order_left[self.current_site ],
-                                                 self.contraction_psi[self.current_site -1][0][j],self.contraction_psi[self.current_site -1][1])
-                            mergv, idvm = contra(mergv, idvm, v2, [2 * self.current_site ])
-                        merg_psi.append(mergv)
-
-                    self.contraction_psi[self.current_site ] = ([merg_psi,idvm])
-                    self.contraction_z[self.current_site ] = ([merg,idm])
 
     def contraction_updat_twosite2(self):
         if self.going_righ==0:
@@ -398,11 +228,11 @@ class tensor_net:
                     self.contraction_psi[self.current_site + 2][0][j], self.contraction_psi[self.current_site +2][1])
                     dpsi.append(merg_psi)
                 dPsi.append(dpsi+[dpsi_idx])
-        dmerge=torch.zeros((self.merged_tensor).size())
+        dmerge=torch.zeros((self.merged_tensor).size(),dtype=torch.float64)
 
         for im1 in [1,2]:
             for im2 in [1,2]:
-                dpsi=torch.zeros((dPsi[0][0]).size())
+                dpsi=torch.zeros((dPsi[0][0]).size(),dtype=torch.float64)
                 im=(self.image[self.current_site,:]==im1)*(self.image[self.current_site+1,:]==im2)
                 for j in range(self.m):
                     if im[j]==1:
@@ -463,7 +293,7 @@ class tensor_net:
         #             dmerge=tensor_slide(dmerge,self.merged_idx,[2-im1,2-im2],[self.current_site*2,self.current_site*2+2],dpsi,(dPsi[0][-1]))
         psi_1=1.0/self.psi
         dPsi, dPsi_idx=contra(dPsi, dPsi_idx,psi_1,[-1])
-        dmerge=tensor_add(2*dPsi/self.n,dPsi_idx,-2*dZ/self.Z,dZ_idx)
+        dmerge=tensor_add(2*dPsi,dPsi_idx,-2*self.m*dZ/self.Z,dZ_idx)
 
         gnorm = torch.norm(dmerge) / 20
         if (gnorm < 1.0): #% & & self.bond_dims(self.current_bond) <= 50;
@@ -558,72 +388,7 @@ class tensor_net:
 
         return dmerge
 
-    def train(self,loops):
-        for loop in range(loops):
-            self.going_righ=0
 
-            for i in np.arange(self.n - 2, 0, -1):
-
-                self.current_site=i
-                self.merged_tensor,self.merged_idx=contra(self.tensors[self.current_site],self.order_left[self.current_site],
-                                      self.tensors[self.current_site+1],self.order_left[self.current_site+1])
-                self.Z=self.compute_Z()
-                self.psi=self.compute_psi()
-                dmerge=self.gradient_descent()
-                # nll=0
-                # for k in range(self.m):
-                #     nll=nll+(torch.log(self.psi[k] *self.psi[k] /self.Z))
-                # nll=nll/self.m
-                # print nll,i
-                self.tensors[self.current_site], self.tensors[self.current_site + 1] = svd_update(
-                    self.tensors[self.current_site], self.order[self.current_site],
-                    self.tensors[self.current_site + 1], self.order[self.current_site + 1], dmerge,
-                    self.going_righ, 0.0002, self.max_bond
-                )
-                self.contraction_updat_twosite()
-
-            self.going_righ = 1
-            for i in range(self.n - 2):
-                self.current_site = i
-                self.merged_tensor, self.merged_idx = contra(self.tensors[self.current_site],
-                                                             self.order_left[self.current_site],
-                                                             self.tensors[self.current_site + 1],
-                                                             self.order_left[self.current_site + 1])
-                self.Z = self.compute_Z()
-                self.psi = self.compute_psi()
-                # nll = 0
-                # for k in range(self.m):
-                #     nll = nll + ( torch.log(self.psi[k] *self.psi[k]  / self.Z))
-                # nll=nll/self.m
-                # print nll,i
-                dmerge = self.gradient_descent()
-                self.tensors[self.current_site], self.tensors[self.current_site + 1] = svd_update(
-                    self.tensors[self.current_site], self.order[self.current_site],
-                    self.tensors[self.current_site + 1], self.order[self.current_site + 1], dmerge,
-                    self.going_righ, 0.0002, self.max_bond
-                )
-                self.contraction_updat_twosite()
-            for j in range(len(self.links)):
-                self.Z = self.compute_Z()
-                self.psi = self.compute_psi()
-                k0 = self.links[j][0]
-                k1=self.links[j][1]
-                dmerge=self.gradient_descent5(k0,k1)
-                self.tensors[k0], self.tensors[k1] = svd_update(
-                    self.tensors[k0], self.order[k0],
-                    self.tensors[k1], self.order[k1], dmerge,
-                    self.going_righ, 0.0002, self.max_bond
-                )
-                self.contraction_update_all_left()
-            nll=0
-            for k in range(self.m):
-                nll = nll + (torch.log(self.psi[k] *self.psi[k] / self.Z))
-            nll = nll / self.m
-            print nll
-            if nll>self.nll_history[-1]+0.002:
-                self.nll_history.append(nll)
-            else:
-                break
     def train2(self,loops):
         for loop in range(loops):
             self.going_righ=0
@@ -643,7 +408,7 @@ class tensor_net:
                 self.tensors[self.current_site], self.tensors[self.current_site + 1] = svd_update(
                     self.tensors[self.current_site], self.order[self.current_site],
                     self.tensors[self.current_site + 1], self.order[self.current_site + 1], dmerge,
-                    self.going_righ, 0.0002, self.max_bond
+                    self.going_righ, 1e-6, self.max_bond
                 )
                 self.contraction_updat_twosite2()
 
@@ -654,27 +419,30 @@ class tensor_net:
                                                              self.order_left[self.current_site],
                                                              self.tensors[self.current_site + 1],
                                                              self.order_left[self.current_site + 1])
-                t1 = time.time()
+                # t1 = time.time()
                 self.Z = self.compute_Z()
-                t2=time.time()
+                # t2=time.time()
                 self.psi = self.compute_psi2()
                 # nll = 0
                 # for k in range(self.m):
                 #     nll = nll + ( torch.log(self.psi[k] *self.psi[k]  / self.Z))
                 # nll=nll/self.m
                 # print nll,i
-                t3=time.time()
+                # t3=time.time()
                 dmerge = self.gradient_descent2()
-                t4=time.time()
+                # t4=time.time()
                 self.tensors[self.current_site], self.tensors[self.current_site + 1] = svd_update(
                     self.tensors[self.current_site], self.order[self.current_site],
                     self.tensors[self.current_site + 1], self.order[self.current_site + 1], dmerge,
-                    self.going_righ, 0.0002, self.max_bond
+                    self.going_righ, 1e-6, self.max_bond
                 )
-                t5=time.time()
+                # t5=time.time()
                 self.contraction_updat_twosite2()
-                t6=time.time()
-                print t2-t1,t3-t2,t4-t3,t5-t4,t6-t5
+                # t6=time.time()
+                # print t2-t1,t3-t2,t4-t3,t5-t4,t6-t5
+                if i == 400:
+                    print self.m
+
             # for j in range(len(self.links)):
             #     self.Z = self.compute_Z()
             #     self.psi = self.compute_psi()
@@ -692,16 +460,22 @@ class tensor_net:
                 nll = nll + (torch.log(self.psi[k] *self.psi[k] / self.Z))
             nll = nll / self.m
             print nll
-            if nll>self.nll_history[-1]+0.002:
+            if nll>self.nll_history[-1]+2e-5:
                 self.nll_history.append(nll)
             else:
                 break
 
 
+data=sio.loadmat('mnist_100_images.mat')
+images=data['train_x_binary']
+images=torch.Tensor([images])
+images=images.view([784,100])
+images=images[:,0:20]
+del data
 
-T=torch.rand([50,20])
-T[T>0.5]=2
-T[T<=0.5]=1
+# images=torch.rand([700,100])
+# images[images>0.7]=2
+# images[images<=0.7]=1
 # net=tensor_net(T,0.0001,np.array([]),20,2)
 # net.init_tensors()
 # net.init_image_tensor()
@@ -709,11 +483,12 @@ T[T<=0.5]=1
 # t1=time.time()
 # net.train(50)
 # t2=time.time()
-net=tensor_net(T,0.0001,np.array([]),40,2)
+net=tensor_net(images,0.001,np.array([[250,500]]),60,2)
 net.init_tensors()
 net.init_image_tensor()
 net.contraction_update_all_left2()
-# t3=time.time()
-net.train2(1)
-# t4=time.time()
-# print t4-t3
+t3=time.time()
+net.train2(5)
+t4=time.time()
+print t4-t3
+# print a

@@ -54,15 +54,15 @@ class tensor_net:
             self.tensors[self.current_site+1]=v
 
     def init_tensors(self):
-        self.tensors.append(torch.rand([2,self.min_bond]).cuda())
+        self.tensors.append(torch.rand([2,self.min_bond]))
         for i in range(1,self.n-1):
-            self.tensors.append(torch.rand(self.min_bond,2,self.min_bond).cuda())
-        self.tensors.append(torch.rand([self.min_bond,2]).cuda())
+            self.tensors.append(torch.rand(self.min_bond,2,self.min_bond))
+        self.tensors.append(torch.rand([self.min_bond,2]))
         for j in range(len(self.links)):
             sl=self.tensors[self.links[j][0]].size()
             sr=self.tensors[self.links[j][1]].size()
-            self.tensors[self.links[j][0]]=torch.rand(list(sl)+list([2])).cuda()
-            self.tensors[self.links[j][1]] = torch.rand(list(sr) + list([2])).cuda()
+            self.tensors[self.links[j][0]]=torch.rand(list(sl)+list([2]))
+            self.tensors[self.links[j][1]] = torch.rand(list(sr) + list([2]))
         self.going_righ=1
         for j in range(self.n-1):
             self.current_site=j
