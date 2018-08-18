@@ -104,10 +104,10 @@ def svd_update(A,idxa,B,idxb,T_C,going_right,err,max_bond):
     # print(torch.mm(U,U.t()))
     # print(torch.mm(V,V.t()))
     if going_right==1:
-        V=torch.mm(S*torch.eye(bond,dtype=torch.float64),V)
+        V=torch.mm(S*torch.eye(bond,dtype=V.dtype),V)
         V=V / torch.sqrt(sum(sum(V*V)))
     else:
-        U=torch.mm(U,torch.eye(bond,dtype=torch.float64)*S)
+        U=torch.mm(U,torch.eye(bond,dtype=V.dtype)*S)
         U = U / torch.sqrt(sum(sum(U * U)))
 
     # for i in np.arange(bond/2+1,1,-1):
@@ -238,46 +238,6 @@ def tensor_slide(A,idxa,v,idxv,C,idxc):
 #     mat = scipy.io.loadmat(file)
 #     return mat
 
-# a=[1,2,3,4]
-# p
-#
-# # range(3)
-# #
-# # #
-# l=list(np.arange(3))
-# l=l+list([-1])
-# print l
-# A=torch.rand([2,3,4])
-# B=torch.rand([2,3,4])
-# c=contra(A,[1,2,3],B,[1,2,4])
-#
-# e,ie=contra(A,[0,2,3],torch.eye(2),[0,1])
-# a=e.permute([2,0,1])
-# d,id=contra(e,ie,B,[1,2,4])
-# print d,c
-# a=torch.Tensor([[[1,2,3],[2,3,4],[3,4,5]],[[4,5,6],[6,7,8],[8,9,10]]])
-# b=torch.Tensor([[[1,2],[2,3],[3,4]],[[3,4],[4,5],[5,6]],[[6,7],[7,8],[8,9]]])
-# a=a.permute([0,2,1])
-# print contra(a,[1,3,2],b,[2,3,4])
-# A=torch.rand([3,4,5])
-# B=torch.rand([3,3,2,])
-# u,v=svd_update(A,[0,1,2],B,[0,5,3],0,1,0,np.inf)
-# # print A,contra(A,[0,1],B,[0,1])
-# # # # A=torch.zeros([3,2,2,4])
-# # # # v=[0,0]
-# # # # c=torch.ones([3,4])
-# print contra(u,[1,3,4],u,[2,3,4]),contra(v,[1,5,6],v,[2,5,6])
-# a=torch.rand([50,2,50])
-# b=torch.rand([50,2,50])
-# t1=time.time()
-# contra(a, [1, 2, 3], b, [3, 4, 5])[0]
-# t2=time.time()
-# contra(a,[1,2,3 ],b,[3,4,5])[0]
-# t3=time.time()
-# contra(a, [1, 2, 3], b, [3, 4, 5])[0]
-# t4=time.time()
-# contra(a,[1,2,3 ],b,[3,4,5])[0]
-# t5=time.time()
-# print t2-t1,t3-t2,t4-t3,t5-t4
-# a=torch.ones([2,2,2])
-# print torch.norm(a)
+# a=torch.rand([1,10],dtype=torch.float64)
+# b=a.float()
+# print b
