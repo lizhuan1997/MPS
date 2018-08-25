@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from tensor_method import contra, svd_update, tensor_slide, tensor_add
+from tensor_method import contra, svd_update, tensor_slide, tensor_add, normalize
 import time
 import scipy.io as sio
 
@@ -65,7 +65,7 @@ class tensor_net:
     def init_tensors(self):
         self.tensors.append(torch.ones([2,self.min_bond],dtype=torch.float64))
         for i in range(1,self.n-1):
-            self.tensors.append(torch.ones(self.min_bond,2,self.min_bond,dtype=torch.float64))
+            self.tensors.append(torch.rand(self.min_bond,2,self.min_bond,dtype=torch.float64))
         self.tensors.append(torch.ones([self.min_bond,2],dtype=torch.float64))
         for j in range(len(self.links)):
             sl=self.tensors[self.links[j][0]].size()
@@ -75,7 +75,7 @@ class tensor_net:
         self.going_righ=1
         for j in range(self.n-1):
             self.current_site=j
-            self.orthogonalize(0.000,np.inf)
+            self.orthogonalize(0,2)
         # self.going_righ=0
         # for j in np.arange(self.n-2,0,-1):
         #     self.current_site=j
@@ -237,13 +237,15 @@ class tensor_net:
         #             dmerge=tensor_slide(dmerge,self.merged_idx,[2-im1,2-im2],[self.current_site*2,self.current_site*2+2],dpsi,(dPsi[0][-1]))
         psi_1=1.0/self.psi
         dPsi, dPsi_idx=contra(dPsi, dPsi_idx,psi_1,[-1])
-        dmerge=tensor_add(2*dPsi/self.m,dPsi_idx,-2*4*dZ/self.Z,dZ_idx)
+        dmerge=tensor_add(2*dPsi/self.m,dPsi_idx,-2*dZ/self.Z,dZ_idx)
 
-        gnorm = torch.norm(dmerge) / 80
-        if (gnorm < 1.0): #% & & self.bond_dims(self.current_bond) <= 50;
-            dmerge = dmerge / gnorm;
+
+        # gnorm = torch.norm(dmerge) / 80
+        # if (gnorm < 1.0): #% & & self.bond_dims(self.current_bond) <= 50;
+        #     dmerge = dmerge / gnorm;
+        dmerge=normalize(dmerge,dPsi_idx,[2*self.current_site,2*self.current_site+2])
         dmerge = tensor_add(self.merged_tensor,self.merged_idx , self.learning_rate * dmerge,dPsi_idx)
-
+        dmerge=dmerge/torch.norm(dmerge)
 
         return dmerge
 
@@ -295,13 +297,15 @@ class tensor_net:
 
         psi_1 = 1.0 / self.psi
         dpsi, dpsi_idx = contra(dpsi, dpsi_idx, psi_1, [-1])
-        dmerge = tensor_add(2 * dpsi/self.m, dpsi_idx, -2 * 4 * dZ / self.Z, dZ_idx)
+        dmerge = tensor_add(2 * dpsi/self.m, dpsi_idx, -2 * dZ / self.Z, dZ_idx)
 
-        gnorm = torch.norm(dmerge) / 80
-        if (gnorm < 1.0):  # % & & self.bond_dims(self.current_bond) <= 50;
-            dmerge = dmerge / gnorm;
+        # gnorm = torch.norm(dmerge) / 80
+        # if (gnorm < 1.0):  # % & & self.bond_dims(self.current_bond) <= 50;
+        #     dmerge = dmerge / gnorm;
+
+        dmerge=normalize(dmerge,dpsi_idx,[2*j,2*k])
         dmerge = tensor_add(self.merged_tensor,self.merged_idx , self.learning_rate * dmerge,dpsi_idx)
-
+        dmerge = dmerge / torch.norm(dmerge)
 
         return dmerge
 
@@ -359,9 +363,6 @@ class tensor_net:
                 self.contraction_updat_twosite2()
                 # t6=time.time()
                 # print t2-t1,t3-t2,t4-t3,t5-t4,t6-t5
-                if i == 400:
-                    print self.m
-
             for j in range(len(self.links)):
                 self.Z = self.compute_Z()
                 self.psi = self.compute_psi2()
@@ -374,6 +375,7 @@ class tensor_net:
                     self.going_righ, 2e-6, self.max_bond
                 )
                 self.contraction_update_all_left2()
+
             nll=0
             for k in range(self.m):
                 nll = nll + (torch.log(self.psi[k] *self.psi[k] / self.Z))
@@ -399,7 +401,7 @@ data=sio.loadmat('mnist_100_images.mat')
 images=data['train_x_binary']
 images=torch.Tensor([images])
 images=images.view([784,100])
-images=images[:,0:20]
+images=images[:,0:50]
 del data
 
 # images=torch.ones([700,100])
@@ -412,12 +414,13 @@ del data
 # t1=time.time()
 # net.train(50)
 # t2=time.time()
-net=tensor_net(images,0.001,np.array([[250,500]]),30,2)
+
+net=tensor_net(images,0.001,np.array([[250,500]]),20,2)
 net.init_tensors()
 net.init_image_tensor()
 net.contraction_update_all_left2()
 t3=time.time()
-net.train2(7)
+net.train2(15)
 t4=time.time()
 print t4-t3
 # print a

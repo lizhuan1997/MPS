@@ -234,6 +234,29 @@ def tensor_slide(A,idxa,v,idxv,C,idxc):
     A=A.permute((ra_1))
     return A
 
+
+def normalize(A,idxa,idxn):
+    ra=[]
+    rb=[]
+    for i in range(len(idxa)):
+        if sum(torch.Tensor(idxn)==idxa[i])==0:
+            rb.append(i)
+        else:
+            ra.append(i)
+    ra=ra+rb
+    A=A.permute(ra)
+    for i in range(2):
+        for j in range(2):
+            if torch.norm(A[i,j,])/20<1:
+                A[i,j,]=20*A[i,j,]/torch.norm(A[i,j,])
+    ra_1 = np.zeros(len(idxa), dtype=int)
+    ra_1[ra]=range(len(idxa))
+
+    A=A.permute(list(ra_1))
+    return A
+
+
+
 # def load_mnist(file):
 #     mat = scipy.io.loadmat(file)
 #     return mat
@@ -241,3 +264,8 @@ def tensor_slide(A,idxa,v,idxv,C,idxc):
 # a=torch.rand([1,10],dtype=torch.float64)
 # b=a.float()
 # print b
+#
+# a=torch.rand([5,2,2,2])
+# b=normalize(a,[1,2,3,4],[3,4])
+# print torch.norm(b[1,1,])
+# # print a,b

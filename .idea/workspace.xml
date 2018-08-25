@@ -4,9 +4,7 @@
     <list default="true" id="74de66e8-7f11-4369-94ba-e903b8a211b5" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/MPS_speedup.py" beforeDir="false" afterPath="$PROJECT_DIR$/MPS_speedup.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MPS_speedup_GPU.py" beforeDir="false" afterPath="$PROJECT_DIR$/MPS_speedup_GPU.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tensor_method.py" beforeDir="false" afterPath="$PROJECT_DIR$/tensor_method.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -18,20 +16,21 @@
     <session id="1844799554">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="1" />
+          <entry key="project.closed" value="4" />
           <entry key="project.open.time.3" value="1" />
-          <entry key="project.open.time.4" value="1" />
-          <entry key="project.opened" value="2" />
+          <entry key="project.open.time.4" value="2" />
+          <entry key="project.open.time.5" value="1" />
+          <entry key="project.opened" value="4" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="py" value="692" />
+          <entry key="py" value="1565" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="Python" value="692" />
+          <entry key="Python" value="1565" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
@@ -51,8 +50,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="161">
-              <caret line="7" column="14" lean-forward="true" selection-start-line="7" selection-start-column="14" selection-end-line="7" selection-end-column="14" />
+            <state relative-caret-position="92">
+              <caret line="7" column="14" selection-start-line="7" selection-start-column="14" selection-end-line="7" selection-end-column="14" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -63,12 +62,11 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/MPS_speedup_GPU.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="270">
+            <state relative-caret-position="7636">
               <caret line="377" column="23" selection-start-line="377" selection-start-column="23" selection-end-line="377" selection-end-column="23" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
                 <element signature="e#7688#10470#0" />
-                <element signature="e#10520#13851#0" />
               </folding>
             </state>
           </provider>
@@ -77,10 +75,11 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/tensor_method.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="377">
-              <caret line="240" lean-forward="true" selection-start-line="240" selection-start-column="2" selection-end-line="242" selection-end-column="9" />
+            <state relative-caret-position="371">
+              <caret line="250" column="27" selection-start-line="250" selection-start-column="27" selection-end-line="250" selection-end-column="27" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
+                <marker date="1535184379981" expanded="true" signature="6330:6770" ph="..." />
               </folding>
             </state>
           </provider>
@@ -89,7 +88,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/MPS.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1403">
+            <state relative-caret-position="501">
               <caret line="64" column="77" selection-start-line="64" selection-start-column="77" selection-end-line="64" selection-end-column="77" />
             </state>
           </provider>
@@ -98,8 +97,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/MPS_speedup.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2051">
-              <caret line="407" column="44" lean-forward="true" selection-start-line="407" selection-start-column="44" selection-end-line="407" selection-end-column="44" />
+            <state relative-caret-position="371">
+              <caret line="417" column="47" selection-start-line="417" selection-start-column="47" selection-end-line="417" selection-end-column="47" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
                 <element signature="e#1978#2611#0" />
@@ -130,8 +129,8 @@
       <find>cuda</find>
       <find>seed</find>
       <find>rand</find>
-      <find>ones</find>
       <find>64</find>
+      <find>ones</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -156,10 +155,10 @@
         <option value="$PROJECT_DIR$/MPS_GPU.py" />
         <option value="$PROJECT_DIR$/MPS.py" />
         <option value="$PROJECT_DIR$/tensor_method_GPU.py" />
-        <option value="$PROJECT_DIR$/MPS_speedup.py" />
-        <option value="$PROJECT_DIR$/tensor_method.py" />
         <option value="$PROJECT_DIR$/test.py" />
         <option value="$PROJECT_DIR$/MPS_speedup_GPU.py" />
+        <option value="$PROJECT_DIR$/tensor_method.py" />
+        <option value="$PROJECT_DIR$/MPS_speedup.py" />
       </list>
     </option>
   </component>
@@ -202,7 +201,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.test">
+  <component name="RunManager" selected="Python.MPS_speedup">
     <configuration name="MPS" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="MPS" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -295,9 +294,9 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.test" />
         <item itemvalue="Python.MPS_speedup" />
         <item itemvalue="Python.contra" />
+        <item itemvalue="Python.test" />
         <item itemvalue="Python.MPS" />
       </list>
     </recent_temporary>
@@ -324,7 +323,7 @@
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.49444443" visible="true" weight="0.22264631" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49444443" weight="0.22264631" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.32824427" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -479,27 +478,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/MPS.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1403">
-          <caret line="64" column="77" selection-start-line="64" selection-start-column="77" selection-end-line="64" selection-end-column="77" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tensor_method.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="377">
-          <caret line="240" lean-forward="true" selection-start-line="240" selection-start-column="2" selection-end-line="242" selection-end-column="9" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="161">
-          <caret line="7" column="14" lean-forward="true" selection-start-line="7" selection-start-column="14" selection-end-line="7" selection-end-column="14" />
+        <state relative-caret-position="92">
+          <caret line="7" column="14" selection-start-line="7" selection-start-column="14" selection-end-line="7" selection-end-column="14" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
           </folding>
@@ -508,20 +490,37 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/MPS_speedup_GPU.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="270">
+        <state relative-caret-position="7636">
           <caret line="377" column="23" selection-start-line="377" selection-start-column="23" selection-end-line="377" selection-end-column="23" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
             <element signature="e#7688#10470#0" />
-            <element signature="e#10520#13851#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/MPS.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="501">
+          <caret line="64" column="77" selection-start-line="64" selection-start-column="77" selection-end-line="64" selection-end-column="77" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tensor_method.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="371">
+          <caret line="250" column="27" selection-start-line="250" selection-start-column="27" selection-end-line="250" selection-end-column="27" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+            <marker date="1535184379981" expanded="true" signature="6330:6770" ph="..." />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/MPS_speedup.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2051">
-          <caret line="407" column="44" lean-forward="true" selection-start-line="407" selection-start-column="44" selection-end-line="407" selection-end-column="44" />
+        <state relative-caret-position="371">
+          <caret line="417" column="47" selection-start-line="417" selection-start-column="47" selection-end-line="417" selection-end-column="47" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
             <element signature="e#1978#2611#0" />
